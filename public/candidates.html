@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India Voting System - Candidates</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#f4f4f4;
+}
+
+header{
+background:#0b5394;
+color:white;
+padding:18px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+header h1{
+font-size:28px;
+}
+
+button{
+cursor:pointer;
+border:none;
+padding:10px 18px;
+border-radius:6px;
+font-size:16px;
+}
+
+.logout{
+background:red;
+color:white;
+}
+
+.resultBtn{
+background:green;
+color:white;
+margin-right:10px;
+}
+
+.container{
+
+width:90%;
+margin:40px auto;
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+
+gap:25px;
+
+}
+
+.card{
+
+background:white;
+border-radius:12px;
+box-shadow:0 5px 15px rgba(0,0,0,.2);
+text-align:center;
+padding:20px;
+
+}
+
+.card img{
+
+width:120px;
+height:120px;
+object-fit:contain;
+
+}
+
+.card h2{
+
+margin-top:15px;
+color:#0b5394;
+
+}
+
+.card p{
+
+margin:8px 0;
+font-size:18px;
+
+}
+
+.voteBtn{
+
+background:#138808;
+color:white;
+margin-top:15px;
+width:100%;
+
+}
+
+.voteBtn:hover{
+
+background:#0c6805;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>🇮🇳 India Voting System</h1>
+
+<div>
+
+<button class="resultBtn" onclick="window.location='result.html'">
+
+View Results
+
+</button>
+
+<button class="logout" onclick="logout()">
+
+Logout
+
+</button>
+
+</div>
+
+</header>
+
+<div class="container" id="candidateList">
+
+</div>
+
+<script>
+
+const API="http://localhost:5000/api";
+
+const token=localStorage.getItem("token");
+
+if(!token){
+
+window.location="login.html";
+
+}
+
+function getImage(party){
+
+party=party.toLowerCase();
+
+if(party.includes("bjp")) return "images/bjp.png";
+
+if(party.includes("congress")) return "images/congress.png";
+
+if(party.includes("aap")) return "images/aap.png";
+
+if(party.includes("sp")) return "images/sp.png";
+
+return "images/default.png";
+
+}
+
+async function loadCandidates(){
+
+try{
+
+const response=await fetch(API+"/candidates",{
+
+headers:{
+
+Authorization:"Bearer "+token
+
+}
+
+});
+
+const candidates=await response.json();
+
+let html="";
+
+candidates.forEach(candidate=>{
+
+html+=`
+
+<div class="card">
+
+<img src="${getImage(candidate.party)}">
+
+<h2>${candidate.name}</h2>
+
+<p><b>Party:</b> ${candidate.party}</p>
+
+<p><b>Age:</b> ${candidate.age}</p>
+
+<button
+
+class="voteBtn"
+
+onclick="vote('${candidate._id}')">
+
+Vote
+
+</button>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("candidateList").innerHTML=html;
+
+}
+
+catch(err){
+
+alert("Unable to Load Candidates");
+
+}
+
+}
+
+async function vote(id){
+
+if(!confirm("Are you sure you want to vote?"))
+
+return;
+
+try{
+
+const response=await fetch(API+"/vote/"+id,{
+
+method:"POST",
+
+headers:{
+
+Authorization:"Bearer "+token
+
+}
+
+});
+
+const data=await response.json();
+
+alert(data.message);
+
+if(response.ok){
+
+window.location="result.html";
+
+}
+
+}
+
+catch(err){
+
+alert("Voting Failed");
+
+}
+
+}
+
+function logout(){
+
+localStorage.removeItem("token");
+
+window.location="login.html";
+
+}
+
+loadCandidates();
+
+</script>
+
+</body>
+</html>
